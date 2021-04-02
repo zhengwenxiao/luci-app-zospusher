@@ -7,11 +7,7 @@ local sys = require "luci.sys"
 local ifaces = sys.net:devices()
 
 m=Map("zospusher",translate("ZOS推送服务"),
-translate("「Server酱」，英文名「zospusher」，是一款从服务器推送报警信息和日志到微信的工具。<br /><br />如果你在使用中遇到问题，请到这里提交：")
-.. [[<a href="https://github.com/tty228/luci-app-zospusher" target="_blank">]]
-.. translate("github 项目地址")
-.. [[</a>]]
-)
+translate("ZOS推送服务，是一款从服务器推送报警信息和日志到微信的工具。"))
 
 m:section(SimpleSection).template  = "zospusher/status"
 
@@ -27,17 +23,13 @@ s.anonymous = true
 a=s:taboption("basic", Flag,"zospusher_enable",translate("启用"))
 a.rmempty = true
 
-a=s:taboption("basic", Value,"sckey",translate('微信推送/新旧共用'), translate("").."旧版调用代码<a href='http://sc.ftqq.com' target='_blank'>点击这里</a><br>新版代码获取<a href='https://sct.ftqq.com/' target='_blank'>点击这里</a><br>")
+a=s:taboption("basic", Value,"pusherurl",translate('推送服务地址'), translate(""))
 a.rmempty = true
+a.description = translate("推送服务地址，无需填写推送前缀，以“/”结尾")
 
-a=s:taboption("basic",Value,"pushplus_token",translate('pushplus_token'),translate("").."获取pushplus_token <a href='http://www.pushplus.plus/' target='_blank'>点击这里</a><br>")
+a=s:taboption("basic", Value,"sckey",translate('许可密钥'), translate(""))
 a.rmempty = true
-
-a=s:taboption("basic", Value, "tg_token", translate("TG_token"),translate("").."获取机器人<a href='https://t.me/BotFather' target='_blank'>点击这里</a><br>与创建的机器人发一条消息，开启对话<br>")
-a.rmempty = true
-
-a=s:taboption("basic", Value,"chat_id",translate('TG_chatid'),translate("").."获取 chat_id <a href='https://t.me/getuserIDbot' target='_blank'>点击这里</a>")
-a.rmempty = true
+a.description = translate("此处为推送服务的前缀，如果在服务端未设置，请填写用户名")
 
 a=s:taboption("basic", Value,"device_name",translate('本设备名称'))
 a.rmempty = true

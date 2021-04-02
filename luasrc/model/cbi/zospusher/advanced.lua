@@ -1,7 +1,7 @@
 local nt = require "luci.sys".net
 local fs=require"nixio.fs"
 
-m=Map("zospusher",translate("提示："),
+m=Map("zospusher",translate("提示"),
 translate("如果你不了解这些选项的含义，请不要修改这些选项"))
 
 s = m:section(TypedSection, "zospusher", "高级设置")
