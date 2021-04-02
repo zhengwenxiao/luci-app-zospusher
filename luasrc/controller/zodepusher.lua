@@ -6,7 +6,7 @@ function index()
 		return
 	end
 
-	entry({"admin", "services", "zospusher"}, alias("admin", "services", "zospusher", "setting"),_("微信推送"), 30).dependent = true
+	entry({"admin", "services", "zospusher"}, alias("admin", "services", "zospusher", "setting"),_("推送服务"), 30).dependent = true
 	entry({"admin", "services", "zospusher", "setting"}, cbi("zospusher/setting"),_("配置"), 40).leaf = true
 	entry({"admin", "services", "zospusher", "advanced"}, cbi("zospusher/advanced"),_("高级设置"), 50).leaf = true
 	entry({"admin", "services", "zospusher", "client"}, form("zospusher/client"), "在线设备", 80)
