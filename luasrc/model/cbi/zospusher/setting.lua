@@ -296,12 +296,12 @@ a:value("interface",translate("仅通知此接口设备"))
 a.rmempty = true
 
 
-a = s:taboption("disturb", DynamicList, "zospusher_whitelist", translate("忽略列表"))
+a = s:taboption("disturb", DynamicList, "zospusher_blacklist", translate("忽略列表"))
 nt.mac_hints(function(mac, name) a :value(mac, "%s (%s)" %{ mac, name }) end)
 a.rmempty = true
 a:depends({macmechanism="allow"})
 
-a = s:taboption("disturb", DynamicList, "zospusher_blacklist", translate("关注列表"))
+a = s:taboption("disturb", DynamicList, "zospusher_whitelist", translate("关注列表"))
 nt.mac_hints(function(mac, name) a:value(mac, "%s (%s)" %{ mac, name }) end)
 a.rmempty = true
 a:depends({macmechanism="block"})
