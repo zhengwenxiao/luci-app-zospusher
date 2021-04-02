@@ -5,7 +5,7 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=luci-app-serverchan
+PKG_NAME:=luci-app-zospusher
 PKG_VERSION:=1.83
 PKG_RELEASE:=9
 
@@ -16,7 +16,7 @@ define Package/$(PKG_NAME)
   CATEGORY:=LuCI
   SUBMENU:=3. Applications
   DEPENDS:=+iputils-arping +curl
-  TITLE:=LuCI support for serverchan
+  TITLE:=LuCI support for zospusher
   PKGARCH:=all
 endef
 
@@ -24,7 +24,7 @@ define Build/Compile
 endef
 
 define Package/$(PKG_NAME)/conffiles
-/etc/config/serverchan
+/etc/config/zospusher
 endef
 
 define Package/$(PKG_NAME)/install

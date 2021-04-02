@@ -3,20 +3,20 @@
 # 读取设置文件
 function get_config(){
 	while [[ "$*" != "" ]]; do
-		eval ${1}='`uci get serverchan.serverchan.$1`' 2>/dev/null
+		eval ${1}='`uci get zospusher.zospusher.$1`' 2>/dev/null
 		shift
 	done
 }
 
 # 初始化设置信息
 function read_config(){
-	get_config "serverchan_enable" "sckey" "pusherurl" "sctkey" "tg_token" "chat_id" "pushplus_token" "serverchan_ipv4" "ipv4_interface" "ipv4_URL" "serverchan_ipv6" "ipv6_interface" "ipv6_URL" "serverchan_up" "serverchan_down" "serverchan_sheep" "serverchan_whitelist" "serverchan_blacklist" "serverchan_interface" "starttime" "endtime" "cpuload_enable" "cpuload" "temperature_enable" "temperature" "device_name" "err_enable" "network_err_event" "err_sheep_enable" "system_time_event" "autoreboot_time" "network_restart_time" "public_ip_event" "public_ip_retry_count" "soc_code" "sleeptime" "up_timeout" "down_timeout" "device_aliases" "debuglevel" "cpuload" "temperature" "send_mode" "regular_time" "regular_time_2" "regular_time_3" "interval_time" "thread_num" "timeout_retry_count" "err_device_aliases" "oui_dir" "oui_data" "client_usage" "client_usage_max" "client_usage_disturb" "client_usage_whitelist" "reset_regularly"
+	get_config "zospusher_enable" "sckey" "pusherurl" "sctkey" "tg_token" "chat_id" "pushplus_token" "zospusher_ipv4" "ipv4_interface" "ipv4_URL" "zospusher_ipv6" "ipv6_interface" "ipv6_URL" "zospusher_up" "zospusher_down" "zospusher_sheep" "zospusher_whitelist" "zospusher_blacklist" "zospusher_interface" "starttime" "endtime" "cpuload_enable" "cpuload" "temperature_enable" "temperature" "device_name" "err_enable" "network_err_event" "err_sheep_enable" "system_time_event" "autoreboot_time" "network_restart_time" "public_ip_event" "public_ip_retry_count" "soc_code" "sleeptime" "up_timeout" "down_timeout" "device_aliases" "debuglevel" "cpuload" "temperature" "send_mode" "regular_time" "regular_time_2" "regular_time_3" "interval_time" "thread_num" "timeout_retry_count" "err_device_aliases" "oui_dir" "oui_data" "client_usage" "client_usage_max" "client_usage_disturb" "client_usage_whitelist" "reset_regularly"
 	for str_version in "wrtbwmon" "iputils-arping" "curl" "iw"; do
 		eval `echo ${str_version:0:2}"_version"`=`opkg list-installed|grep -w ^${str_version}|awk '{print $3}'` 2>/dev/null
 	done
-	dir="/tmp/serverchan/" && mkdir -p ${dir}
-	[ ! -z "$oui_dir" ] && [ "$oui_dir" -eq "1" ] && oui_base="${dir}oui_base.txt" || oui_base="/usr/bin/serverchan/oui_base.txt"
-	debuglevel=`echo "$debuglevel"` && [ -z "$debuglevel" ] && logfile="/dev/null" || logfile="${dir}serverchan.log"
+	dir="/tmp/zospusher/" && mkdir -p ${dir}
+	[ ! -z "$oui_dir" ] && [ "$oui_dir" -eq "1" ] && oui_base="${dir}oui_base.txt" || oui_base="/usr/bin/zospusher/oui_base.txt"
+	debuglevel=`echo "$debuglevel"` && [ -z "$debuglevel" ] && logfile="/dev/null" || logfile="${dir}zospusher.log"
 	device_aliases=`echo "$device_aliases"|sed 's/ /\n/g'|sed 's/-/ /'` 2>/dev/null
 	err_device_aliases=`echo "$err_device_aliases"|sed 's/ /\n/g'` 2>/dev/null
 	client_usage_whitelist=`echo "$client_usage_whitelist"|sed 's/ /\n/g'` 2>/dev/null
@@ -24,7 +24,7 @@ function read_config(){
 	[ -z "$up_timeout" ] || [ "$up_timeout" -eq "0" ] && up_timeout="2"
 	[ -z "$down_timeout" ] || [ "$down_timeout" -eq "0" ] && down_timeout="20";down_timeout=`expr ${down_timeout} / 2 + 1`
 	[ -z "$timeout_retry_count" ] && timeout_retry_count="2";[ "$timeout_retry_count" -eq "0" ] && timeout_retry_count="1"
-	[ -z "$sckey" ] && [ ! -z "$sctkey" ] && sckey="$sctkey" && uci set serverchan.serverchan.sckey="$sctkey" && uci delete serverchan.serverchan.sctkey && uci commit serverchan
+	[ -z "$sckey" ] && [ ! -z "$sctkey" ] && sckey="$sctkey" && uci set zospusher.zospusher.sckey="$sctkey" && uci delete zospusher.zospusher.sctkey && uci commit zospusher
 	[ ! -z "$sckey" ]  &&  sckey_url="${pusherurl}${sckey}/"
 	str_title_start="####";str_title_end="";str_splitline="%0D%0A%0D%0A---%0D%0A%0D%0A";str_linefeed="%0D%0A%0D%0A";str_tab="	";str_space=" "
 	[ ! -z "$pushplus_token" ] && [ -z "$sckey" ] && str_tab=""
@@ -33,17 +33,17 @@ function read_config(){
 }
 
 # 初始化
-function serverchan_init(){
+function zospusher_init(){
 	enable_detection
-	if [ -f "/usr/bin/serverchan/errlog" ]; then
-		cat /usr/bin/serverchan/errlog > ${logfile}
+	if [ -f "/usr/bin/zospusher/errlog" ]; then
+		cat /usr/bin/zospusher/errlog > ${logfile}
 		echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】载入上次重启前日志" >> ${logfile}
 		echo "--------------------------------------------------------" >> ${logfile}
 	fi
 	down_oui &
 	deltemp
 	
-	rm -f ${dir}fd1 ${dir}sheep_usage ${dir}old_sheep_usage ${dir}client_usage_aliases ${dir}old_client_usage_aliases /usr/bin/serverchan/errlog >/dev/null 2>&1
+	rm -f ${dir}fd1 ${dir}sheep_usage ${dir}old_sheep_usage ${dir}client_usage_aliases ${dir}old_client_usage_aliases /usr/bin/zospusher/errlog >/dev/null 2>&1
 	[ ! -f "/usr/sbin/wrtbwmon" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】未安装 wrtbwmon ，流量统计不可用" >> ${logfile}
 	[ -z "$ip_version" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法获取依赖项 iputils-arping 版本号，请确认插件是否正常运行" >> ${logfile}
 	[ -z "$cu_version" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法获取依赖项 curl 版本号，请确认插件是否正常运行" >> ${logfile}
@@ -85,7 +85,7 @@ function deltemp(){
 function enable_detection(){
 	[ ! "$1" ] && local time_n=1
 	for i in `seq 1 $time_n`; do
-		get_config serverchan_enable;[ -z "$serverchan_enable" ] || [ "$serverchan_enable" -eq "0" ] && `/etc/init.d/serverchan stop` || sleep 1
+		get_config zospusher_enable;[ -z "$zospusher_enable" ] || [ "$zospusher_enable" -eq "0" ] && `/etc/init.d/zospusher stop` || sleep 1
 	done
 }
 
@@ -323,7 +323,7 @@ function cut_str {
 }
 
 # 在线设备列表
-function serverchan_first(){
+function zospusher_first(){
 	[ -f "${dir}ipAddress" ] && local IPLIST=`cat ${dir}ipAddress|awk '{print $1}'|grep -v "^$"|sort -u`
 	for ip in $IPLIST; do
 		read -u 5
@@ -346,40 +346,40 @@ function serverchan_first(){
 }
 
 # 创建计划任务
-function serverchan_cron(){
+function zospusher_cron(){
 	function del_cron(){
-		( echo `crontab -l`|grep -q "serverchan" ) && crontab -l > conf && sed -i "/serverchan/d" conf && crontab conf && rm -f conf >/dev/null 2>&1
+		( echo `crontab -l`|grep -q "zospusher" ) && crontab -l > conf && sed -i "/zospusher/d" conf && crontab conf && rm -f conf >/dev/null 2>&1
 	}
 	function re_cron(){
 		/etc/init.d/cron stop
 		/etc/init.d/cron start
 	}
 	del_cron
-	if [ -z "$serverchan_enable" ] || [ -z "$send_mode" -a -z "$reset_regularly" ]; then
+	if [ -z "$zospusher_enable" ] || [ -z "$send_mode" -a -z "$reset_regularly" ]; then
 		re_cron
 		return
 	fi
 	
 	# 重置流量
 	if [ ! -z "$reset_regularly" ] && [ "$reset_regularly" -eq "1" ]; then
-		crontab -l > conf && echo -e "0 0 * * * rm /tmp/serverchan/usage.db >/dev/null 2>&1" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
-		crontab -l > conf && echo -e "0 0 * * * rm /tmp/serverchan/usage6.db >/dev/null 2>&1" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
+		crontab -l > conf && echo -e "0 0 * * * rm /tmp/zospusher/usage.db >/dev/null 2>&1" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
+		crontab -l > conf && echo -e "0 0 * * * rm /tmp/zospusher/usage6.db >/dev/null 2>&1" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
 	fi
 	[ ! -z "$regular_time_2" ] && local regular_time_2=",${regular_time_2}"
 	[ ! -z "$regular_time_3" ] && local regular_time_3=",${regular_time_3}"
 	# 定时发送
 	if [ ! -z "$regular_time" ] || [ ! -z "$regular_time_2" ] || [ ! -z "$regular_time_3" ]; then
-		crontab -l > conf && echo -e "0 $regular_time$regular_time_2$regular_time_3 * * * /usr/bin/serverchan/serverchan send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
+		crontab -l > conf && echo -e "0 $regular_time$regular_time_2$regular_time_3 * * * /usr/bin/zospusher/zospusher send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
 	# 间隔发送
 	elif [ ! -z "$interval_time" ]; then
-		crontab -l > conf && echo -e "0 */$interval_time * * * /usr/bin/serverchan/serverchan send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
+		crontab -l > conf && echo -e "0 */$interval_time * * * /usr/bin/zospusher/zospusher send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
 	fi
 	re_cron
 }
 
 # 免打扰检测
-function serverchan_disturb(){
-	[ -z "$serverchan_sheep" ] || [ -z "$starttime" ] || [ -z "$endtime" ] && return 0
+function zospusher_disturb(){
+	[ -z "$zospusher_sheep" ] || [ -z "$starttime" ] || [ -z "$endtime" ] && return 0
 	if [ `date +%H` -ge $endtime -a $starttime -lt $endtime ] || [ `date +%H` -lt $starttime -a $starttime -lt $endtime ] || [ `date +%H` -lt $starttime -a `date +%H` -ge $endtime -a $starttime -gt $endtime ]; then
 		unset sheep_starttime
 		rm -f ${dir}sheep_usage ${dir}old_sheep_usage  2>/dev/null
@@ -389,12 +389,12 @@ function serverchan_disturb(){
 		return 0
 	else
 		[ -z "$sheep_starttime" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【免打扰】夜深了，该休息了" >> ${logfile} && sheep_starttime=`date +%s`
-		if [ "$serverchan_sheep" -eq "1" ] ;then
+		if [ "$zospusher_sheep" -eq "1" ] ;then
 			while [ `date +%H` -lt "$endtime" ]; do
 				enable_detection
 				sleep $sleeptime
 			done
-		elif  [ "$serverchan_sheep" -eq "2" ] ;then
+		elif  [ "$zospusher_sheep" -eq "2" ] ;then
 			disturb_text="【免打扰】"
 			return 1
 		fi
@@ -404,23 +404,23 @@ function serverchan_disturb(){
 # 文件锁
 function LockFile(){
 	if [ $1 = "lock" ] ;then
-		[ ! -f "${dir}serverchan.lock" ] && > ${dir}serverchan.lock && return
-		while [ -f "${dir}serverchan.lock" ]; do
+		[ ! -f "${dir}zospusher.lock" ] && > ${dir}zospusher.lock && return
+		while [ -f "${dir}zospusher.lock" ]; do
 			enable_detection 1
 		done
 		LockFile lock
 	fi
-	[ $1 = "unlock" ] && rm -f ${dir}serverchan.lock >/dev/null 2>&1
+	[ $1 = "unlock" ] && rm -f ${dir}zospusher.lock >/dev/null 2>&1
 	return
 }
 
 # 检测黑白名单
 function blackwhitelist(){
 	[ ! "$1" ] && return 1
-	[ -z "$serverchan_whitelist" ] && [ -z "$serverchan_blacklist" ] && [ -z "$serverchan_interface" ] && return
-	[ ! -z "$serverchan_whitelist" ] && ( ! echo "$serverchan_whitelist"|grep -q -i -w $1) && return
-	[ ! -z "$serverchan_blacklist" ] && ( echo "$serverchan_blacklist"|grep -q -i -w $1) && return
-	[ ! -z "$serverchan_interface" ] && ( echo `getinterface ${1}`|grep -q -i -w $serverchan_interface ) && return
+	[ -z "$zospusher_whitelist" ] && [ -z "$zospusher_blacklist" ] && [ -z "$zospusher_interface" ] && return
+	[ ! -z "$zospusher_whitelist" ] && ( ! echo "$zospusher_whitelist"|grep -q -i -w $1) && return
+	[ ! -z "$zospusher_blacklist" ] && ( echo "$zospusher_blacklist"|grep -q -i -w $1) && return
+	[ ! -z "$zospusher_interface" ] && ( echo `getinterface ${1}`|grep -q -i -w $zospusher_interface ) && return
 	return 1
 }
 
@@ -440,7 +440,7 @@ function get_client(){
 		local js_str="${js_str}<div class='th'><%:${tmp_uptime}%></div></div>"
 	done < ${dir}ipAddress
 	fi
-cat>/usr/lib/lua/luci/view/serverchan/client.htm<<EOF
+cat>/usr/lib/lua/luci/view/zospusher/client.htm<<EOF
 <h2><%:在线设备列表%></h2><div class="table" id="traffic"><div class="tr table-titles"><div class="th" id="thClient" style="width:17%"><%:客户端名%></div><div class="th" id="thMAC" style="width:10%"><%:MAC%></div><div class="th" id="thIP" style="width:17%"><%:IP%></div><div class="th" id="thTotal" style="width:9%"><%:总计流量%></div><div class="th" id="thFirstSeen" style="width:15%"><%:在线时间%></div></div>
 $js_str
 </div>
@@ -494,7 +494,7 @@ function unattended(){
 		local interfaceuptime=`getinterfaceuptime`
 		if [ ! -z "$autoreboot_time" ] && [ `cat /proc/uptime|awk -F. '{run_hour=$1/3600;printf("%d",run_hour)}'` -ge "$autoreboot_time" ] && [ "$system_time_event" -eq "1" ]; then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` 【无人值守任务】重启路由器咯" >> ${logfile}
-			cat ${logfile} > /usr/bin/serverchan/errlog
+			cat ${logfile} > /usr/bin/zospusher/errlog
 			sleep 2 && reboot && exit
 		elif [ ! -z "$network_restart_time" ] && [ ! -z "$interfaceuptime" ] && [ `echo "$interfaceuptime"|awk -F. '{run_hour=$1/3600;printf("%d",run_hour)}'` -ge "$network_restart_time" ] && [ "$system_time_event" -eq "2" ]; then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` 【无人值守任务】重新拨号咯" >> ${logfile}
@@ -515,10 +515,10 @@ function unattended(){
 			ifup wan >/dev/null 2>&1
 			sleep 60
 			local wanIP=`getip wanipv4` && local hostIP=`getip hostipv4`
-			[ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -eq "1" ] && local IPv4=${wanIP}
-			[ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -eq "2" ] && local IPv4=${hostIP}
-			[ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -eq "1" ] && local IPv6=`getip wanipv6`
-			[ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -eq "2" ] && local IPv6=`getip hostipv6`
+			[ ! -z "$zospusher_ipv4" ] && [ "$zospusher_ipv4" -eq "1" ] && local IPv4=${wanIP}
+			[ ! -z "$zospusher_ipv4" ] && [ "$zospusher_ipv4" -eq "2" ] && local IPv4=${hostIP}
+			[ ! -z "$zospusher_ipv6" ] && [ "$zospusher_ipv6" -eq "1" ] && local IPv6=`getip wanipv6`
+			[ ! -z "$zospusher_ipv6" ] && [ "$zospusher_ipv6" -eq "2" ] && local IPv6=`getip hostipv6`
 			[ ! -z "$wanIP" ] && [ ! -z "$hostIP" ] && ( ! echo "$wanIP"|grep -q -w ${hostIP} ) && echo IPv4 $IPv4 > ${dir}ip && echo -e IPv6 $last_IPv6 >> ${dir}ip
 		fi
 	fi
@@ -542,16 +542,16 @@ function rand_geturl(){
 			local network_enable="404"
 			[ -z "$network_err_time" ] && network_err_time=`date +%s`
 			if [ ! -z "$network_err_event" ] && [ "$((`date +%s`-$network_err_time))" -ge "600" ]; then
-				> ${dir}send_enable.lock && serverchan_first && deltemp
+				> ${dir}send_enable.lock && zospusher_first && deltemp
 				geterrdevicealiases
 				if [ "$?" -eq "0" ]; then
-					[ -f /usr/bin/serverchan/autoreboot_count ] && retry_count=`cat /usr/bin/serverchan/autoreboot_count` && rm -f /usr/bin/serverchan/autoreboot_count >/dev/null 2>&1
+					[ -f /usr/bin/zospusher/autoreboot_count ] && retry_count=`cat /usr/bin/zospusher/autoreboot_count` && rm -f /usr/bin/zospusher/autoreboot_count >/dev/null 2>&1
 					[ ! -z ${retry_count} ] && retry_count=0;retry_count=`expr $retry_count + 1`
 					if [ "$network_err_event" -eq "1" ] ;then
 						if [ "$retry_count" -lt "3" ] ;then
-							echo "$retry_count" > /usr/bin/serverchan/autoreboot_count
+							echo "$retry_count" > /usr/bin/zospusher/autoreboot_count
 							echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】正在尝试重启路由，当前第 $retry_count 次 " >> ${logfile}
-							cat ${logfile} > /usr/bin/serverchan/errlog
+							cat ${logfile} > /usr/bin/zospusher/errlog
 							sleep 2 && reboot && exit
 						fi
 						[ "$retry_count" -eq "3" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】已经重启路由2次，修复失败，请主人自行修复哦" >> ${logfile}
@@ -572,11 +572,11 @@ function rand_geturl(){
 							sleep 60 && network_restart
 						elif [ "$retry_count" -eq "3" ] ;then
 							echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】正在尝试修复网络，当前第 3 次，备份设置项，并修改相关设置" >> ${logfile}
-							mkdir -p /usr/bin/serverchan/configbak
-							cp -p -f /etc/config/network /usr/bin/serverchan/configbak/network
-							cp -p -f /etc/config/dhcp /usr/bin/serverchan/configbak/dhcp
-							cp -p -f /etc/config/firewall /usr/bin/serverchan/configbak/firewall
-							cp -p -f /etc/firewall.user /usr/bin/serverchan/configbak/firewall.user
+							mkdir -p /usr/bin/zospusher/configbak
+							cp -p -f /etc/config/network /usr/bin/zospusher/configbak/network
+							cp -p -f /etc/config/dhcp /usr/bin/zospusher/configbak/dhcp
+							cp -p -f /etc/config/firewall /usr/bin/zospusher/configbak/firewall
+							cp -p -f /etc/firewall.user /usr/bin/zospusher/configbak/firewall.user
 							uci set network.wan.peerdns='0'
 							uci delete network.wan.dns
 							uci add_list network.wan.dns='223.5.5.5'
@@ -593,22 +593,22 @@ function rand_geturl(){
 							uci commit firewall
 							sleep 60 && network_restart
 						elif [ "$retry_count" -eq "4" ] ;then
-							echo "$retry_count" > /usr/bin/serverchan/autoreboot_count
-							cat ${logfile} > /usr/bin/serverchan/errlog
+							echo "$retry_count" > /usr/bin/zospusher/autoreboot_count
+							cat ${logfile} > /usr/bin/zospusher/errlog
 							sleep 2 && reboot && exit
 						elif [ "$retry_count" -eq "5" ] ;then
-							echo "$retry_count" > /usr/bin/serverchan/autoreboot_count
+							echo "$retry_count" > /usr/bin/zospusher/autoreboot_count
 							echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】修复失败，还原设置中，请自行检查网络设置" >> ${logfile}
-							cp -p -f /usr/bin/serverchan/configbak/network /etc/config/network
-							cp -p -f /usr/bin/serverchan/configbak/dhcp /etc/config/dhcp
-							cp -p -f /usr/bin/serverchan/configbak/firewall /etc/config/firewall
-							cp -p -f /usr/bin/serverchan/configbak/firewall.user /etc/firewall.user
-							cat ${logfile} > /usr/bin/serverchan/errlog
+							cp -p -f /usr/bin/zospusher/configbak/network /etc/config/network
+							cp -p -f /usr/bin/zospusher/configbak/dhcp /etc/config/dhcp
+							cp -p -f /usr/bin/zospusher/configbak/firewall /etc/config/firewall
+							cp -p -f /usr/bin/zospusher/configbak/firewall.user /etc/firewall.user
+							cat ${logfile} > /usr/bin/zospusher/errlog
 							sleep 2 && reboot && exit
 						fi
 					fi
 				fi
-			elif [ -f /usr/bin/serverchan/autoreboot_count ]; then
+			elif [ -f /usr/bin/zospusher/autoreboot_count ]; then
 				network_err_time=`expr $network_err_time - 600` && sleep 60
 			fi
 			enable_detection
@@ -616,47 +616,47 @@ function rand_geturl(){
 		fi
 	continue
 	done
-	rm -f /usr/bin/serverchan/autoreboot_count >/dev/null 2>&1
+	rm -f /usr/bin/zospusher/autoreboot_count >/dev/null 2>&1
 }
 
 # 检测 ip 状况
 function ip_changes(){
-	[ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -eq "1" ] && local IPv4=`getip wanipv4`
-	[ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -eq "2" ] && local IPv4=`getip hostipv4`
-	[ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -eq "1" ] && local IPv6=`getip wanipv6`
-	[ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -eq "2" ] && local IPv6=`getip hostipv6`
+	[ ! -z "$zospusher_ipv4" ] && [ "$zospusher_ipv4" -eq "1" ] && local IPv4=`getip wanipv4`
+	[ ! -z "$zospusher_ipv4" ] && [ "$zospusher_ipv4" -eq "2" ] && local IPv4=`getip hostipv4`
+	[ ! -z "$zospusher_ipv6" ] && [ "$zospusher_ipv6" -eq "1" ] && local IPv6=`getip wanipv6`
+	[ ! -z "$zospusher_ipv6" ] && [ "$zospusher_ipv6" -eq "2" ] && local IPv6=`getip hostipv6`
 
 	if [ -f ${dir}ip ]; then
 		local last_IPv4=$(cat "${dir}ip"|grep IPv4|awk '{print $2}'|grep -v "^$"|sort -u|head -n1)
 		local last_IPv6=$(cat "${dir}ip"|grep IPv6|awk '{print $2}'|grep -v "^$"|sort -u|head -n1)
-		if [ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -ne "0" ] && [ ! -z "$IPv4" ] && ( ! echo ${IPv4}|grep -w -q ${last_IPv4} ); then
+		if [ ! -z "$zospusher_ipv4" ] && [ "$zospusher_ipv4" -ne "0" ] && [ ! -z "$IPv4" ] && ( ! echo ${IPv4}|grep -w -q ${last_IPv4} ); then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}当前IP：${IPv4}" >> ${logfile}
 			echo IPv4 $IPv4 > ${dir}ip && echo -e IPv6 $last_IPv6 >> ${dir}ip
 			title="IP 地址变化"
 			content="${content}${str_splitline}${str_title_start} IP 地址变化${str_title_end}${str_linefeed}${str_tab}当前 IP：${IPv4}"
-		elif [ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -ne "0" ] && [ -z "$IPv4" ]; then
+		elif [ ! -z "$zospusher_ipv4" ] && [ "$zospusher_ipv4" -ne "0" ] && [ -z "$IPv4" ]; then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】获取 IPv4 地址失败" >> ${logfile}
 		fi
 		
-		if [ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -ne "0" ] && [ ! -z "$IPv6" ] && ( ! echo "$IPv6"|grep -w -q ${last_IPv6} ); then
+		if [ ! -z "$zospusher_ipv6" ] && [ "$zospusher_ipv6" -ne "0" ] && [ ! -z "$IPv6" ] && ( ! echo "$IPv6"|grep -w -q ${last_IPv6} ); then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}当前IPv6：${IPv6}" >> ${logfile}
 			echo IPv4 $IPv4 > ${dir}ip && echo -e IPv6 $IPv6 >> ${dir}ip
 			[ -z "$title" ] && title="IPv6 地址变化"
 			[ ! -z "$title" ] && title="IP 地址变化"
 			content="${content}${str_splitline}${str_title_start} IPv6 地址变化${str_title_end}${str_linefeed}${str_tab}当前 IPv6：${IPv6}"				
-		elif [ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -ne "0" ] && [ -z "$IPv6" ]; then
+		elif [ ! -z "$zospusher_ipv6" ] && [ "$zospusher_ipv6" -ne "0" ] && [ -z "$IPv6" ]; then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】获取 IPv6 地址失败" >> ${logfile}
 		fi
 		
 	else
 		echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}路由器已经重启!" >> ${logfile}
-		[ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -ne "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  当前IP: ${IPv4}" >> ${logfile}
-		[ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -ne "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  当前IPv6: ${IPv6}" >> ${logfile}
+		[ ! -z "$zospusher_ipv4" ] && [ "$zospusher_ipv4" -ne "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  当前IP: ${IPv4}" >> ${logfile}
+		[ ! -z "$zospusher_ipv6" ] && [ "$zospusher_ipv6" -ne "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  当前IPv6: ${IPv6}" >> ${logfile}
 		echo IPv4 $IPv4 > ${dir}ip && echo -e IPv6 $IPv6 >> ${dir}ip	
 		title="路由器重新启动"
 		content="${content}${str_splitline}${str_title_start} 路由器重新启动"${str_title_end}
-		[ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -ne "0" ] && content="${content}${str_linefeed}${str_tab}当前IP：${IPv4}"
-		[ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -ne "0" ] && content="${content}${str_linefeed}${str_tab}当前IPv6：${IPv6}"
+		[ ! -z "$zospusher_ipv4" ] && [ "$zospusher_ipv4" -ne "0" ] && content="${content}${str_linefeed}${str_tab}当前IP：${IPv4}"
+		[ ! -z "$zospusher_ipv6" ] && [ "$zospusher_ipv6" -ne "0" ] && content="${content}${str_linefeed}${str_tab}当前IPv6：${IPv6}"
 	fi
 	
 	if [ ! -z "$content" ] ;then
@@ -687,8 +687,8 @@ function up(){
 			local ip_name=`getname ${1} ${ip_mac}`
 			blackwhitelist ${ip_mac};local ip_blackwhite=$?
 			echo "$1 ${ip_mac} ${ip_name} `date +%s` ${ip_interface}" >> ${dir}ipAddress
-			[ -f "${dir}send_enable.lock" ] || [ -z "$serverchan_up" ] || [ -z "$ip_blackwhite" ] && LockFile unlock && return
-			[ ! -z "$serverchan_up" ] && [ "$serverchan_up" -ne "1" ] && LockFile unlock && return
+			[ -f "${dir}send_enable.lock" ] || [ -z "$zospusher_up" ] || [ -z "$ip_blackwhite" ] && LockFile unlock && return
+			[ ! -z "$zospusher_up" ] && [ "$zospusher_up" -ne "1" ] && LockFile unlock && return
 			[ ! -z "$ip_blackwhite" ] && [ "$ip_blackwhite" -ne "0" ] && LockFile unlock && return
 			[ -f "${dir}title" ] && local title=`cat ${dir}title`
 			[ -f "${dir}content" ] && local content=`cat ${dir}content`	
@@ -703,7 +703,7 @@ function up(){
 				local content="${str_splitline}${str_title_start} 新设备连接${str_title_end}${str_linefeed}${str_tab}客户端名：${str_space}${str_space}${str_space}${str_space}${str_space}${ip_name}${str_linefeed}${str_tab}客户端IP： ${str_space}${str_space}${str_space}${str_space}${1}${str_linefeed}${str_tab}客户端MAC：${str_space}${str_space}${str_space}${str_space}${ip_mac}${str_linefeed}${str_tab}网络接口：${str_space}${str_space}${str_space}${str_space}${str_space}${ip_interface}"
 			fi				
 			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}新设备 ${ip_name} ${1} 连接了">> ${logfile}
-			#[ ! -z "$serverchan_blacklist" ] && local title="你偷偷关注的设备上线了"
+			#[ ! -z "$zospusher_blacklist" ] && local title="你偷偷关注的设备上线了"
 			[ ! -z "$title" ] && echo "$title" >${dir}title
 			[ ! -z "$content" ] && echo -n "$content" >>${dir}content
 		fi
@@ -741,8 +741,8 @@ function down_send(){
 	for ip in $IPLIST; do
 		local ip_mac=`getmac ${ip}`
 		blackwhitelist ${ip_mac};local ip_blackwhite=$?
-		[ -z "$serverchan_down" ] || [ -z "$ip_blackwhite" ] && continue
-		[ ! -z "$serverchan_down" ] && [ "$serverchan_down" -ne "1" ] && continue
+		[ -z "$zospusher_down" ] || [ -z "$ip_blackwhite" ] && continue
+		[ ! -z "$zospusher_down" ] && [ "$zospusher_down" -ne "1" ] && continue
 		[ ! -z "$ip_blackwhite" ] && [ "$ip_blackwhite" -ne "0" ] && continue
 		local ip_name=`getname ${ip} ${ip_mac}`
 		local time_up=`cat ${dir}tmp_downlist|grep -w ${ip}|awk '{print $4}'|grep -v "^$"|sort -u|head -n1`
@@ -866,11 +866,11 @@ function cputop(){
 # 发送定时数据
 function send(){
 	echo "`date "+%Y-%m-%d %H:%M:%S"` 【定时数据】创建定时任务" >> ${logfile}
-	serverchan_disturb;local send_disturb=$?
+	zospusher_disturb;local send_disturb=$?
 	get_config "send_title" "router_status" "client_list" "router_temp" "router_wan"
 
 	[ -z "$send_title" ] && local send_title="路由状态："
-	[ ! -z "$client_list" ] && [ "$client_list" -eq "1" ] && > ${dir}send_enable.lock && serverchan_first &
+	[ ! -z "$client_list" ] && [ "$client_list" -eq "1" ] && > ${dir}send_enable.lock && zospusher_first &
 
 	if [ ! -z "$router_status" ] && [ "$router_status" -eq "1" ]; then
 		local systemload=`cat /proc/loadavg|awk '{print $1" "$2" "$3}'`
@@ -890,7 +890,7 @@ function send(){
 		local send_wanIP=`getip wanipv4`;local send_hostIP=`getip hostipv4`
 		local send_content="${send_content}${str_splitline}${str_title_start} WAN 口信息${str_title_end}${str_linefeed}${str_tab}接口ip:${send_wanIP}"
 		local send_content="${send_content}${str_linefeed}${str_tab}外网ip:${send_hostIP}"
-		if [ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -ne "0" ]; then
+		if [ ! -z "$zospusher_ipv6" ] && [ "$zospusher_ipv6" -ne "0" ]; then
 			local send_wanIPv6=`getip wanipv6`;local send_hostIPv6=`getip hostipv6`
 			local send_content="${send_content}${str_linefeed}${str_tab}ipv6 :${send_wanIPv6}"
 			local send_content="${send_content}${str_linefeed}${str_tab}外网v6:${send_hostIPv6}"
@@ -932,7 +932,7 @@ function send(){
 # 初始化
 read_config
 deltemp
-serverchan_cron
+zospusher_cron
 
 # 限制并发进程
 [ -z "$thread_num" ] || [ "$thread_num" -eq "0" ] && thread_num=5
@@ -953,19 +953,19 @@ if [ "$1" ] ;then
 fi
 
 # 载入在线设备
-serverchan_init;[ $? -eq 1 ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】读取设置出错，请检查设置项 " >> ${logfile} && exit
+zospusher_init;[ $? -eq 1 ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】读取设置出错，请检查设置项 " >> ${logfile} && exit
 echo "`date "+%Y-%m-%d %H:%M:%S"` 【初始化】载入在线设备" >> ${logfile}
-> ${dir}send_enable.lock && serverchan_first && deltemp
+> ${dir}send_enable.lock && zospusher_first && deltemp
 echo "`date "+%Y-%m-%d %H:%M:%S"` 【初始化】初始化完成" >> ${logfile}
 
 # 循环
-while [ "$serverchan_enable" -eq "1" ]; do
+while [ "$zospusher_enable" -eq "1" ]; do
 	deltemp
 	usage update
-	serverchan_disturb;disturb=$?
+	zospusher_disturb;disturb=$?
 
 	# 外网IP变化检测
-	if [ ! -z "$serverchan_ipv4" ] && [ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv4" -ne "0" ] || [ "$serverchan_ipv6" -ne "0" ]; then
+	if [ ! -z "$zospusher_ipv4" ] && [ ! -z "$zospusher_ipv6" ] && [ "$zospusher_ipv4" -ne "0" ] || [ "$zospusher_ipv6" -ne "0" ]; then
 		rand_geturl
 		ip_changes
 	fi
@@ -974,7 +974,7 @@ while [ "$serverchan_enable" -eq "1" ]; do
 	if [ ! -f "${dir}send_enable.lock" ]; then
 		[ ! -z "$title" ] && echo "$title" > ${dir}title
 		[ ! -z "$content" ] && echo "$content" > ${dir}content
-		serverchan_first
+		zospusher_first
 		[ -f "${dir}title" ] && title=`cat ${dir}title` && rm -f ${dir}title >/dev/null 2>&1
 		[ -f "${dir}content" ] && content=`cat ${dir}content` && rm -f ${dir}content >/dev/null 2>&1
 	fi

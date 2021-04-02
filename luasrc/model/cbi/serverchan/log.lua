@@ -1,5 +1,5 @@
-f = SimpleForm("serverchan")
+f = SimpleForm("zospusher")
 f.reset = false
 f.submit = false
-f:append(Template("serverchan/log"))
+f:append(Template("zospusher/log"))
 return f
